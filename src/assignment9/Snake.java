@@ -9,9 +9,12 @@ public class Snake {
 	private LinkedList<BodySegment> segments;
 	private double deltaX;
 	private double deltaY;
+	private double speedMultiplier = 1.0;
+	private static final double BASE_MOVEMENT_SIZE = SEGMENT_SIZE * 1.5;
 	
 	public Snake() {
-		//FIXME - set up the segments instance variable
+		segments = new LinkedList<>();
+		segments.add(new BodySegment(0.5, 0.5, SEGMENT_SIZE));
 		deltaX = 0;
 		deltaY = 0;
 	}
@@ -37,14 +40,20 @@ public class Snake {
 	 * based on the current direction of travel
 	 */
 	public void move() {
-		//FIXME
+		BodySegment head = segments.getFirst();
+        double newX = head.getX() + (deltaX * speedMultiplier); 
+        double newY = head.getY() + (deltaY * speedMultiplier); 
+        segments.addFirst(new BodySegment(newX, newY, SEGMENT_SIZE));
+        segments.removeLast();
 	}
 	
 	/**
 	 * Draws the snake by drawing each segment
 	 */
 	public void draw() {
-		//FIXME
+		for(int i = 0; i < segments.size(); i++) {
+			segments.get(i).draw();
+		}
 	}
 	
 	/**
@@ -53,7 +62,32 @@ public class Snake {
 	 * @return true if the snake successfully ate the food
 	 */
 	public boolean eatFood(Food f) {
-		//FIXME
+		BodySegment head = segments.getFirst();
+		double dx = head.getX() - f.getX();
+		double dy = head.getY() - f.getY();
+		double distance = Math.sqrt(dx * dx + dy * dy);
+
+		if (distance < SEGMENT_SIZE + Food.FOOD_SIZE) {
+			// Grow the snake: add new head, don't remove tail
+			double newX = head.getX() + deltaX;
+			double newY = head.getY() + deltaY;
+			segments.addFirst(new BodySegment(newX, newY, SEGMENT_SIZE));
+			return true;
+		}
+
+		return false;
+	}
+	
+	public boolean eatPowerup(Powerup p) {
+		BodySegment head = segments.getFirst();
+		double dx = head.getX() - p.getX();
+		double dy = head.getY() - p.getY();
+		double distance = Math.sqrt(dx * dx + dy * dy);
+
+		if (distance < SEGMENT_SIZE + Powerup.POWERUP_SIZE) {
+			
+			return true;
+	}
 		return false;
 	}
 	
@@ -62,7 +96,22 @@ public class Snake {
 	 * @return whether or not the head is in the bounds of the window
 	 */
 	public boolean isInbounds() {
-		//FIXME
-		return true;
+		BodySegment head = segments.getFirst();
+		double x = head.getX();
+		double y = head.getY();
+
+		return x >= 0 && x <= 1 && y >= 0 && y <= 1;
+	}
+	
+	public void activateSpeedBoost(double multiplier, int durationMs) {
+		speedMultiplier = multiplier;
+
+		// Use a timer to reset after duration
+		new java.util.Timer().schedule(new java.util.TimerTask() {
+			@Override
+			public void run() {
+				speedMultiplier = 1.0;
+			}
+		}, durationMs);
 	}
 }
